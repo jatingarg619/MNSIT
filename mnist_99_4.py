@@ -32,15 +32,15 @@ class Net(nn.Module):
         
         # CONV Block 2
         self.conv3 = nn.Sequential(
-            nn.Conv2d(32, 16, 3, padding=1),  # 14x14x16
+            nn.Conv2d(32, 32, 3, padding=1),  # 14x14x32
             nn.ReLU(),
-            nn.BatchNorm2d(16),
+            nn.BatchNorm2d(32),
             nn.Dropout(0.01)
         )
         
         # CONV Block 3
         self.conv4 = nn.Sequential(
-            nn.Conv2d(16, 16, 3, padding=1),  # 14x14x16
+            nn.Conv2d(32, 16, 3, padding=1),  # 14x14x16
             nn.ReLU(),
             nn.BatchNorm2d(16),
             nn.Dropout(0.01)
@@ -119,15 +119,15 @@ def main():
     
     torch.manual_seed(1)
     
-    batch_size = 128
+    batch_size = 64
     epochs = 19
     
     # Enhanced data augmentation
     train_transforms = transforms.Compose([
-        transforms.RandomRotation((-12.0, 12.0), fill=(1,)),
-        transforms.RandomAffine(degrees=0, translate=(0.12, 0.12), scale=(0.90, 1.10)),
-        transforms.RandomPerspective(distortion_scale=0.15, p=0.5),
-        transforms.ColorJitter(brightness=0.15, contrast=0.15),
+        transforms.RandomRotation((-7.0, 7.0), fill=(1,)),
+        transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), scale=(0.95, 1.05)),
+        transforms.RandomPerspective(distortion_scale=0.15, p=0.3),
+        transforms.ColorJitter(brightness=0.1, contrast=0.1),
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,))
     ])
@@ -170,8 +170,8 @@ def main():
     optimizer = optim.SGD(
         model.parameters(),
         lr=0.01,
-        momentum=0.9,
-        weight_decay=3e-4,
+        momentum=0.95,
+        weight_decay=1e-4,
         nesterov=True
     )
     
@@ -180,7 +180,7 @@ def main():
         max_lr=0.1,
         epochs=epochs,
         steps_per_epoch=len(train_loader),
-        pct_start=0.3,
+        pct_start=0.2,
         div_factor=10,
         final_div_factor=100,
         anneal_strategy='cos'
