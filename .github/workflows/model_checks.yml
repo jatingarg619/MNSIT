@@ -1,0 +1,67 @@
+name: Model Architecture Checks
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check-model:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install torch torchvision torchsummary
+
+    - name: Check model architecture
+      run: |
+        python - <<EOF
+        import torch
+        import torch.nn as nn
+        from mnist_99_4 import Net
+        from torchsummary import summary
+        
+        def check_model_requirements():
+            model = Net()
+            
+            # Check total parameters
+            total_params = sum(p.numel() for p in model.parameters())
+            assert total_params < 20000, f"Model has {total_params} parameters, should be less than 20000"
+            print(f"✓ Parameter count check passed: {total_params} parameters")
+            
+            # Check for BatchNorm
+            has_batchnorm = any(isinstance(m, nn.BatchNorm2d) for m in model.modules())
+            assert has_batchnorm, "Model must use BatchNormalization"
+            print("✓ BatchNorm check passed")
+            
+            # Check for Dropout
+            has_dropout = any(isinstance(m, nn.Dropout) for m in model.modules())
+            assert has_dropout, "Model must use Dropout"
+            print("✓ Dropout check passed")
+            
+            # Check for GAP (no FC layer)
+            has_fc = any(isinstance(m, nn.Linear) for m in model.modules())
+            has_gap = any(isinstance(m, nn.AdaptiveAvgPool2d) or isinstance(m, nn.AvgPool2d) for m in model.modules())
+            assert not has_fc, "Model should not use Fully Connected layers"
+            assert has_gap, "Model must use Global Average Pooling"
+            print("✓ Architecture check passed (uses GAP, no FC)")
+            
+            # Print model summary
+            print("\nModel Summary:")
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            model = model.to(device)
+            summary(model, (1, 28, 28))
+            
+        if __name__ == "__main__":
+            check_model_requirements()
+        EOF
