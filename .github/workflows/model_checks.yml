@@ -21,13 +21,17 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install torch torchvision torchsummary
+        pip install torch torchvision tqdm torchsummary
+        pip install numpy matplotlib pandas seaborn
+        pip install -r requirements.txt || true
 
     - name: Check model architecture
       run: |
         python - <<EOF
         import torch
         import torch.nn as nn
+        import sys
+        sys.path.append('Assignment 6')
         from mnist_99_4 import Net
         from torchsummary import summary
         
@@ -58,7 +62,7 @@ jobs:
             
             # Print model summary
             print("\nModel Summary:")
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            device = torch.device("cpu")  # Use CPU for CI
             model = model.to(device)
             summary(model, (1, 28, 28))
             
