@@ -19,54 +19,54 @@ class Net(nn.Module):
         
         # CONV Block 1
         self.conv2 = nn.Sequential(
-            nn.Conv2d(16, 32, 3, padding=1),  # 28x28x32
+            nn.Conv2d(16, 20, 3, padding=1),  # 28x28x20
             nn.ReLU(),
-            nn.BatchNorm2d(32),
+            nn.BatchNorm2d(20),
             nn.Dropout(0.01)
         )
         
         # Transition Block 1
         self.trans1 = nn.Sequential(
-            nn.MaxPool2d(2, 2)  # 14x14x32
+            nn.MaxPool2d(2, 2)  # 14x14x20
         )
         
         # CONV Block 2
         self.conv3 = nn.Sequential(
-            nn.Conv2d(32, 32, 3, padding=1),  # 14x14x32
+            nn.Conv2d(20, 24, 3, padding=1),  # 14x14x24
             nn.ReLU(),
-            nn.BatchNorm2d(32),
+            nn.BatchNorm2d(24),
             nn.Dropout(0.01)
         )
         
         # CONV Block 3
         self.conv4 = nn.Sequential(
-            nn.Conv2d(32, 16, 3, padding=1),  # 14x14x16
+            nn.Conv2d(24, 20, 3, padding=1),  # 14x14x20
             nn.ReLU(),
-            nn.BatchNorm2d(16),
+            nn.BatchNorm2d(20),
             nn.Dropout(0.01)
         )
         
         # Transition Block 2
         self.trans2 = nn.Sequential(
-            nn.MaxPool2d(2, 2)  # 7x7x16
+            nn.MaxPool2d(2, 2)  # 7x7x20
         )
         
         # CONV Block 4
         self.conv5 = nn.Sequential(
-            nn.Conv2d(16, 32, 3),  # 5x5x32
+            nn.Conv2d(20, 24, 3),  # 5x5x24
             nn.ReLU(),
-            nn.BatchNorm2d(32),
+            nn.BatchNorm2d(24),
             nn.Dropout(0.01)
         )
         
         # Global Average Pooling
         self.gap = nn.Sequential(
-            nn.AvgPool2d(kernel_size=5)  # 1x1x32
+            nn.AvgPool2d(kernel_size=5)  # 1x1x24
         )
         
         # Output Block
         self.conv6 = nn.Sequential(
-            nn.Conv2d(32, 10, 1)  # 1x1x10
+            nn.Conv2d(24, 10, 1)  # 1x1x10
         )
 
     def forward(self, x):
@@ -119,14 +119,14 @@ def main():
     
     torch.manual_seed(1)
     
-    batch_size = 64
+    batch_size = 32
     epochs = 19
     
     # Enhanced data augmentation
     train_transforms = transforms.Compose([
-        transforms.RandomRotation((-7.0, 7.0), fill=(1,)),
-        transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), scale=(0.95, 1.05)),
-        transforms.RandomPerspective(distortion_scale=0.15, p=0.3),
+        transforms.RandomRotation((-5.0, 5.0), fill=(1,)),
+        transforms.RandomAffine(degrees=0, translate=(0.08, 0.08), scale=(0.97, 1.03)),
+        transforms.RandomPerspective(distortion_scale=0.1, p=0.2),
         transforms.ColorJitter(brightness=0.1, contrast=0.1),
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,))
@@ -169,20 +169,20 @@ def main():
     model = Net().to(device)
     optimizer = optim.SGD(
         model.parameters(),
-        lr=0.01,
+        lr=0.008,
         momentum=0.95,
-        weight_decay=1e-4,
+        weight_decay=5e-5,
         nesterov=True
     )
     
     scheduler = optim.lr_scheduler.OneCycleLR(
         optimizer,
-        max_lr=0.1,
+        max_lr=0.12,
         epochs=epochs,
         steps_per_epoch=len(train_loader),
-        pct_start=0.2,
-        div_factor=10,
-        final_div_factor=100,
+        pct_start=0.25,
+        div_factor=15,
+        final_div_factor=150,
         anneal_strategy='cos'
     )
 
